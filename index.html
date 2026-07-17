@@ -4,6 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Design's Favorites</title>
+
+  <!-- Apply saved theme BEFORE paint to prevent flash (guard for storage-blocked contexts) -->
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('gallery-theme') === 'party') {
+          document.documentElement.setAttribute('data-theme', 'party');
+        }
+      } catch (_) {}
+    })();
+  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -17,9 +29,186 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
+    /* ─── Base transitions ──────────────────────────────────────── */
     .pill-btn { transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, box-shadow 120ms ease; }
     .gallery-item { transition: transform 160ms ease, box-shadow 160ms ease; }
     .gallery-item:hover { transform: translateY(-3px); }
+
+    /* ─── Theme toggle button ───────────────────────────────────── */
+    #theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1.25rem;
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 50%;
+      border: none;
+      font-size: 1.4rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+      transition: transform 200ms ease, box-shadow 200ms ease, background 300ms ease;
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    #theme-toggle:hover {
+      transform: scale(1.12) rotate(12deg);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.18);
+    }
+    /* Use CSS ::after for icon so the early <head> data-theme set shows correct icon with no JS flash */
+    #theme-toggle::after { content: '🎉'; }
+    html[data-theme="party"] #theme-toggle::after { content: '✨'; }
+
+    /* ─── Party mode animations ─────────────────────────────────── */
+    @keyframes bg-shift {
+      0%   { background-position: 0%   50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0%   50%; }
+    }
+    @keyframes rainbow-rotate {
+      0%   { filter: hue-rotate(0deg)   brightness(1.1); }
+      100% { filter: hue-rotate(360deg) brightness(1.1); }
+    }
+    @keyframes pill-pulse {
+      0%, 100% { box-shadow: 0 0 8px  2px rgba(255, 80,180,0.55), 0 0 0 1.5px rgba(255,100,200,0.4); }
+      33%       { box-shadow: 0 0 14px 4px rgba( 80,200,255,0.65), 0 0 0 1.5px rgba( 80,200,255,0.5); }
+      66%       { box-shadow: 0 0 12px 3px rgba(150,255, 80,0.55), 0 0 0 1.5px rgba(150,255, 80,0.4); }
+    }
+    @keyframes gallery-glow {
+      0%, 100% { box-shadow: 0 0 14px 3px rgba(255,100,200,0.35), 0 0 0 1px rgba(255, 80,180,0.45); }
+      33%       { box-shadow: 0 0 14px 3px rgba(100,200,255,0.40), 0 0 0 1px rgba(100,200,255,0.50); }
+      66%       { box-shadow: 0 0 14px 3px rgba(150,255,100,0.35), 0 0 0 1px rgba(150,255,100,0.45); }
+    }
+    @keyframes confetti-fall {
+      0%   { transform: translateY(-30px) rotate(0deg)   scale(1);    opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(110vh) rotate(900deg) scale(0.4);  opacity: 0; }
+    }
+    @keyframes badge-shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+
+    /* ─── Party mode overrides ──────────────────────────────────── */
+    html[data-theme="party"] body {
+      background:      linear-gradient(135deg, #18002e, #001628, #001800, #2e000d, #18001a, #00001a) !important;
+      background-size: 400% 400% !important;
+      animation:       bg-shift 14s ease infinite !important;
+      cursor: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='26' font-size='24'>🎊</text></svg>") 14 14, auto !important;
+    }
+
+    html[data-theme="party"] header h1 {
+      background:      linear-gradient(90deg, #ff6ec7, #ff9933, #ffef33, #33ff99, #33ccff, #cc66ff, #ff6ec7) !important;
+      background-size: 200% auto !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+      animation:       bg-shift 5s linear infinite !important;
+    }
+
+    html[data-theme="party"] header p {
+      color:     #cc88ff !important;
+      animation: rainbow-rotate 6s linear infinite !important;
+    }
+
+    html[data-theme="party"] #gallery-meta {
+      color:     #ff88cc !important;
+      animation: rainbow-rotate 8s linear infinite !important;
+    }
+
+    /* Pills — override inline styles with !important */
+    html[data-theme="party"] .pill-btn {
+      background:    linear-gradient(135deg, rgba(255,80,180,0.18), rgba(80,180,255,0.18)) !important;
+      border-color:  rgba(255,100,200,0.65) !important;
+      color:         #ffffff !important;
+      text-shadow:   0 0 8px rgba(255,160,255,0.9) !important;
+      animation:     pill-pulse 2.8s ease-in-out infinite !important;
+      transition:    transform 120ms ease !important;
+    }
+    html[data-theme="party"] .pill-btn:hover {
+      background: linear-gradient(135deg, rgba(255,80,180,0.38), rgba(80,180,255,0.38)) !important;
+      transform:  scale(1.08) !important;
+    }
+    /* Active pill — clearly distinct: bright outline, no pulsing, scaled up */
+    html[data-theme="party"] .pill-btn[data-active="true"] {
+      background:    linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,200,255,0.32)) !important;
+      border-color:  #ffffff !important;
+      border-width:  2px !important;
+      color:         #ffffff !important;
+      transform:     scale(1.07) !important;
+      box-shadow:    0 0 0 3px rgba(255,255,255,0.38), 0 0 22px 6px rgba(255,150,255,0.65) !important;
+      animation:     none !important;
+      text-shadow:   0 0 12px rgba(255,255,255,0.95) !important;
+    }
+
+    /* Gallery cards */
+    html[data-theme="party"] .gallery-item {
+      animation:     gallery-glow 4.5s ease-in-out infinite !important;
+      border-radius: 14px !important;
+    }
+    html[data-theme="party"] .gallery-item:hover {
+      transform:  translateY(-7px) scale(1.04) !important;
+      box-shadow: 0 0 36px 10px rgba(255,100,200,0.65) !important;
+    }
+
+    /* Category badge label (scoped to avoid hitting error-fallback span) */
+    html[data-theme="party"] .gallery-item .badge-label {
+      background:      linear-gradient(90deg, #ff6ec7, #ffef33, #33ccff, #cc66ff, #ff6ec7) !important;
+      background-size: 300% auto !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+      animation:       badge-shimmer 2s linear infinite !important;
+      font-weight:     800 !important;
+    }
+
+    /* Toggle button in party mode */
+    html[data-theme="party"] #theme-toggle {
+      background:      linear-gradient(135deg, #ff6ec7, #ffcc33, #33ff99, #33ccff, #cc66ff, #ff6ec7) !important;
+      background-size: 300% 300% !important;
+      animation:       bg-shift 3s ease infinite, pill-pulse 2s ease-in-out infinite !important;
+      box-shadow:      0 0 22px 5px rgba(255,100,200,0.65) !important;
+    }
+    html[data-theme="party"] #theme-toggle:hover {
+      transform: scale(1.2) rotate(15deg) !important;
+    }
+
+    /* Warning banner */
+    html[data-theme="party"] #file-warning {
+      background: rgba(80, 20, 0, 0.85) !important;
+    }
+
+    /* Respect OS-level reduced-motion preference.
+       Selectors must match or exceed each animated rule's specificity so that,
+       with equal !important weight, the later (this) declaration wins. */
+    @media (prefers-reduced-motion: reduce) {
+      #theme-toggle { transition: none; }
+      html[data-theme="party"] body,
+      html[data-theme="party"] header h1,
+      html[data-theme="party"] header p,
+      html[data-theme="party"] #gallery-meta,
+      html[data-theme="party"] .pill-btn,
+      html[data-theme="party"] #theme-toggle,
+      html[data-theme="party"] .gallery-item,
+      html[data-theme="party"] .gallery-item .badge-label {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    /* Confetti pieces (injected by JS) */
+    .confetti-piece {
+      position: fixed;
+      top: -40px;
+      border-radius: 3px;
+      animation: confetti-fall linear forwards;
+      pointer-events: none;
+      z-index: 9999;
+    }
   </style>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
@@ -53,6 +242,17 @@
     </p>
   </div>
 
+  <!-- ─── Theme toggle button ─────────────────────────────────── -->
+  <!-- Icon is rendered via CSS ::after so it is correct from first paint even when
+       party mode is restored from localStorage before JS runs. -->
+  <button
+    id="theme-toggle"
+    type="button"
+    aria-pressed="false"
+    aria-label="Toggle party mode"
+    title="Toggle party mode"
+  ></button>
+
   <div class="max-w-screen-xl mx-auto px-6 py-16">
 
     <header class="mb-12">
@@ -71,6 +271,61 @@
   </div>
 
   <script>
+    // ─── Confetti burst ───────────────────────────────────────────
+    function launchConfetti() {
+      // Respect OS-level reduced-motion preference
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      // Throttle: skip if pieces from a previous burst are still falling
+      if (document.querySelectorAll('.confetti-piece').length > 0) return;
+      const COLORS = ['#ff6ec7','#ff9933','#ffef33','#33ff99','#33ccff','#cc66ff','#ff4466','#44ffcc'];
+      const SHAPES = ['square','circle'];
+      const COUNT  = 80;
+      for (let i = 0; i < COUNT; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        const size   = 6 + Math.random() * 10;
+        const color  = COLORS[Math.floor(Math.random() * COLORS.length)];
+        const shape  = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        const left   = Math.random() * 100;
+        const delay  = Math.random() * 0.6;
+        const dur    = 2.2 + Math.random() * 2.4;
+        el.style.cssText = [
+          `width:${size}px`, `height:${size}px`,
+          `background:${color}`,
+          `left:${left}vw`,
+          `border-radius:${shape === 'circle' ? '50%' : '3px'}`,
+          `animation-duration:${dur}s`,
+          `animation-delay:${delay}s`,
+        ].join(';');
+        document.body.appendChild(el);
+        el.addEventListener('animationend', () => el.remove(), { once: true });
+      }
+    }
+
+    // ─── Theme toggle logic ───────────────────────────────────────
+    function isParty() {
+      return document.documentElement.getAttribute('data-theme') === 'party';
+    }
+
+    function toggleTheme() {
+      const btn = document.getElementById('theme-toggle');
+      if (isParty()) {
+        document.documentElement.removeAttribute('data-theme');
+        try { localStorage.removeItem('gallery-theme'); } catch (_) {}
+        btn.setAttribute('aria-pressed', 'false');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'party');
+        try { localStorage.setItem('gallery-theme', 'party'); } catch (_) {}
+        btn.setAttribute('aria-pressed', 'true');
+        launchConfetti();
+      }
+    }
+
+    // Sync aria-pressed with the theme restored from localStorage
+    document.getElementById('theme-toggle').setAttribute('aria-pressed', isParty() ? 'true' : 'false');
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+    // ─── Gallery logic (unchanged) ────────────────────────────────
     const CATEGORIES = window.GALLERY_CATEGORIES || [];
     const IMAGE_EXTS = /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i;
 
@@ -96,14 +351,16 @@
       const bar = document.getElementById('filter-bar');
       bar.innerHTML = '';
 
+      const allActive = activeFilter === 'all';
       const allBtn = document.createElement('button');
       allBtn.className = [
         'pill-btn inline-flex items-center gap-1.5',
         'px-4 py-1.5 rounded-full text-sm font-medium border',
-        activeFilter === 'all'
+        allActive
           ? 'bg-white text-zinc-900 border-white shadow-sm'
           : 'bg-transparent text-zinc-400 border-zinc-700 hover:border-zinc-500 hover:text-zinc-200',
       ].join(' ');
+      if (allActive) allBtn.setAttribute('data-active', 'true');
       allBtn.innerHTML = `All <span class="text-xs opacity-60">${allImages.length}</span>`;
       allBtn.addEventListener('click', () => setFilter('all'));
       bar.appendChild(allBtn);
@@ -113,6 +370,7 @@
         const count = allImages.filter(i => i.category === cat.folder).length;
         const btn = document.createElement('button');
         btn.className = 'pill-btn inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border';
+        if (isActive) btn.setAttribute('data-active', 'true');
 
         const applyInactive = () => {
           btn.style.backgroundColor = 'transparent';
@@ -188,7 +446,8 @@
         const badge = document.createElement('div');
         badge.className = 'absolute bottom-0 left-0 right-0 px-3 pt-6 pb-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150';
         badge.style.background = 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)';
-        badge.innerHTML = `<span class="text-xs font-semibold" style="color:${img.color}">${img.label}</span>`;
+        // .badge-label class scopes party-mode gradient to this span only (avoids hitting error-fallback spans)
+        badge.innerHTML = `<span class="badge-label text-xs font-semibold" style="color:${img.color}">${img.label}</span>`;
 
         wrap.appendChild(image);
         wrap.appendChild(badge);
